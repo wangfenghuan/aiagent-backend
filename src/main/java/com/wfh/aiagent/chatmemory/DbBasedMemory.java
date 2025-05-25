@@ -6,16 +6,16 @@ import com.esotericsoftware.kryo.io.Output;
 import com.wfh.aiagent.model.Conversation;
 import com.wfh.aiagent.service.ConversationService;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.MessageType;
+import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -23,6 +23,8 @@ import java.util.List;
  * @Date 2025/5/25 13:24
  * @Version 1.0
  */
+@Component
+@Slf4j
 public class DbBasedMemory implements ChatMemory {
 
 
@@ -33,6 +35,13 @@ public class DbBasedMemory implements ChatMemory {
 
     static {
         kryo.setRegistrationRequired(false);
+        kryo.register(Conversation.class);
+        kryo.register(ArrayList.class);
+        kryo.register(MessageType.class);
+        kryo.register(HashMap.class);
+        kryo.register(org.springframework.ai.chat.messages.UserMessage.class);
+        kryo.register(org.springframework.ai.chat.messages.AssistantMessage.class);
+        kryo.register(org.springframework.ai.chat.messages.SystemMessage.class);
         // 设置实例化策略
         kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
     }
@@ -75,22 +84,20 @@ public class DbBasedMemory implements ChatMemory {
      * @return
      */
     private List<Message> getOrCreateConversation(String conversationId) {
-        // 从mysql中创建或获取
-        Conversation conversation = conversationService.getById(Integer.valueOf(conversationId));
-        // 如果对话为空，就是创建会话消息
-        String message = conversation.getMessage();
-        byte[] messageBytes = message.getBytes();
-        List<Message> messages = new ArrayList<>();
-        if (conversation != null) {
-            try {
-                Input input = new Input(messageBytes);
-                // 读取对象中的会话消息
-                messages = kryo.readObject(input, ArrayList.class);
-            } catch (Exception e) {
-                e.printStackTrace();
+        try {
+            Conversation conversation = conversationService.getById(conversationId);
+            if (conversation != null && conversation.getMessage() != null) {
+                byte[] bytes = Base64.getDecoder().decode(conversation.getMessage());
+                try (Input input = new Input(bytes)) {
+                    return kryo.readObject(input, ArrayList.class);
+                }catch (Exception e){
+                    log.error("反序列化失败：{}", e.getMessage());
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return messages;
+        return new ArrayList<>();
     }
 
     /**
@@ -99,17 +106,19 @@ public class DbBasedMemory implements ChatMemory {
      * @param messages
      */
     private void saveConversation(String conversationId, List<Message> messages) {
-        // 创建对话消息对象
-        Conversation conversation = new Conversation();
-        Output output = new Output(1024, -1);
-        kryo.writeObject(output, messages);
-        output.close();
-        byte[] bytes = output.toBytes();
-        String conversationStr = Base64.getEncoder().encodeToString(bytes);
-        conversation.setMessage(conversationStr);
-        conversation.setId(Integer.valueOf(conversationId));
-        try {
-            conversationService.save(conversation);
+        try (Output output = new Output(1024, -1)) {
+            kryo.writeObject(output, messages);
+            byte[] bytes = output.toBytes();
+
+            Conversation conversation = new Conversation();
+            conversation.setId(Integer.valueOf(conversationId));
+            conversation.setMessage(Base64.getEncoder().encodeToString(bytes));
+
+            if (conversationService.getById(conversationId) != null) {
+                conversationService.updateById(conversation);
+            } else {
+                conversationService.save(conversation);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

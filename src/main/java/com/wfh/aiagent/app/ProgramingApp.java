@@ -2,7 +2,9 @@ package com.wfh.aiagent.app;
 
 import com.wfh.aiagent.advisor.MyLoggerAdvisor;
 import com.wfh.aiagent.advisor.ReReadingAdvisor;
+import com.wfh.aiagent.chatmemory.DbBasedMemory;
 import com.wfh.aiagent.chatmemory.FileBasedMemory;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -27,6 +29,7 @@ import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvis
 public class ProgramingApp {
 
     private final ChatClient chatClient;
+
 
     private static final String SYSTEM_PROMPT_ADVANCE = "你是一名拥有15年经验的首席Java工程师，擅长处理高并发分布式系统及JVM性能调优。请按照以下结构化流程解决问题：\n" +
             "\n" +
@@ -80,7 +83,7 @@ public class ProgramingApp {
             "【知识扩展】\n" +
             "推荐2个相关论文/技术文档链接";
 
-    private static final String SYSTEM_PROMPT_DEFAULT = "你是一名资深Java技术专家，专注于高效解决具体编程问题。请按以下结构处理问题：\n" +
+    private static final String SYSTEM_PROMPT_DEFAULT2 = "你是一名资深Java技术专家，专注于高效解决具体编程问题。请按以下结构处理问题：\n" +
             "\n" +
             "【问题澄清】\n" +
             "1. 确认问题的核心矛盾点（明确输入输出）\n" +
@@ -111,6 +114,10 @@ public class ProgramingApp {
             "请避免工程文档输出，聚焦技术问题本身。当前问题：[用户具体问题]";
 
 
+
+    private static final String SYSTEM_PROMPT_DEFAULT = "你好啊";
+
+
     record ProgramingReport(String title, List<String> suggestions){
 
     }
@@ -119,20 +126,20 @@ public class ProgramingApp {
      * 初始化chatclient
      * @param dashscopeChatModel
      */
-    public ProgramingApp(ChatModel dashscopeChatModel) {
+    public ProgramingApp(ChatModel dashscopeChatModel, DbBasedMemory chatMemory) {
         // 初始化基于文件的对话记忆
         String fileDir = System.getProperty("user.dir") + "/tmp/.chatmemory";
-        ChatMemory chatMemory = new FileBasedMemory(fileDir);
+        // ChatMemory chatMemory = new FileBasedMemory(fileDir);
         // 初始化基于内存的对话记忆
         // ChatMemory chatMemory = new InMemoryChatMemory();
+        // ChatMemory chatMemory = new DbBasedMemory();
         chatClient = ChatClient.builder(dashscopeChatModel)
                 .defaultSystem(SYSTEM_PROMPT_DEFAULT)
                 .defaultAdvisors(
                         new MessageChatMemoryAdvisor(chatMemory),
                         // 自定义日志
-                        new MyLoggerAdvisor(),
-                        // 增强推理能力
-                        new ReReadingAdvisor()
+                        new MyLoggerAdvisor()
+                        //new ReReadingAdvisor()
                 ).build();
     }
 
@@ -143,7 +150,7 @@ public class ProgramingApp {
      * @return
      */
     public String doChat(String messsage, String chatId){
-        ChatResponse chatResponse = chatClient
+        ChatResponse chatResponse = this.chatClient
                 .prompt()
                 .user(messsage)
                 .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)

@@ -27,6 +27,11 @@ public class FileBasedMemory implements ChatMemory {
 
     static {
         kryo.setRegistrationRequired(false);
+        // 注册 Spring AI 中的消息类
+        kryo.register(org.springframework.ai.chat.messages.UserMessage.class);
+        kryo.register(org.springframework.ai.chat.messages.AssistantMessage.class);
+        kryo.register(org.springframework.ai.chat.messages.SystemMessage.class);
+        // kryo.register(org.springframework.ai.chat.messages.Media.class);
         // 设置实例化策略
         kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
     }
@@ -74,10 +79,18 @@ public class FileBasedMemory implements ChatMemory {
     private List<Message> getOrCreateConversation(String conversationId) {
         File file = getConversationFile(conversationId);
         List<Message> messages = new ArrayList<>();
-        if (file.exists()){
-            try(Input input = new Input(new  FileInputStream(file)) ){
-                messages = kryo.readObject(input, ArrayList.class);
-            }catch (IOException e){
+        if (file.exists()) {
+            try (Input input = new Input(new FileInputStream(file))) {
+                List<Message> loadedMessages = kryo.readObject(input, ArrayList.class);
+                if (loadedMessages != null) {
+                    // 过滤掉 null 消息
+                    for (Message msg : loadedMessages) {
+                        if (msg != null) {
+                            messages.add(msg);
+                        }
+                    }
+                }
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
