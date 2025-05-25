@@ -1,7 +1,12 @@
 spring:
   application:
     name: ai-agent
-# springdoc-openapi????
+  profiles:
+    active: local
+  ai:
+    dashscope:
+      api-key: ${AI_DASHSCOPE_API_KEY}
+# springdoc-openapi项目配置
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -13,7 +18,7 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: com.wfh.aiagent.controller
-# knife4j???????????????
+# knife4j的增强配置，不需要增强可以不配
 knife4j:
   enable: true
   setting:
