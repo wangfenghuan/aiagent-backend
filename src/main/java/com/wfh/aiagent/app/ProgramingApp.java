@@ -8,10 +8,12 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -29,6 +31,9 @@ import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvis
 public class ProgramingApp {
 
     private final ChatClient chatClient;
+
+    @Resource
+    private VectorStore programingAppVectorStore;
 
 
     private static final String SYSTEM_PROMPT_ADVANCE = "你是一名拥有15年经验的首席Java工程师，擅长处理高并发分布式系统及JVM性能调优。请按照以下结构化流程解决问题：\n" +
@@ -83,7 +88,7 @@ public class ProgramingApp {
             "【知识扩展】\n" +
             "推荐2个相关论文/技术文档链接";
 
-    private static final String SYSTEM_PROMPT_DEFAULT2 = "你是一名资深Java技术专家，专注于高效解决具体编程问题。请按以下结构处理问题：\n" +
+    private static final String SYSTEM_PROMPT_DEFAULT = "你是一名资深Java技术专家，专注于高效解决具体编程问题。请按以下结构处理问题：\n" +
             "\n" +
             "【问题澄清】\n" +
             "1. 确认问题的核心矛盾点（明确输入输出）\n" +
@@ -115,7 +120,7 @@ public class ProgramingApp {
 
 
 
-    private static final String SYSTEM_PROMPT_DEFAULT = "你好啊";
+    // private static final String SYSTEM_PROMPT_DEFAULT = "你好啊";
 
 
     record ProgramingReport(String title, List<String> suggestions){
@@ -181,4 +186,26 @@ public class ProgramingApp {
         return programingReport;
     }
 
+    /**
+     * rag知识库问答
+     * @param message
+     * @param chatId
+     * @return
+     */
+    public String doChatWithRag(String message, String chatId){
+        ChatResponse chatResponse = chatClient
+                .prompt()
+                .user(message)
+                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                // 开启日志
+                .advisors(new MyLoggerAdvisor())
+                // 启用rag知识库
+                .advisors(new QuestionAnswerAdvisor(programingAppVectorStore))
+                .call()
+                .chatResponse();
+        String content = chatResponse.getResult().getOutput().getText();
+        log.info("content:{}", content);
+        return content;
+    }
 }
