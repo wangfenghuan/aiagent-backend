@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
@@ -34,6 +35,9 @@ public class ProgramingApp {
 
     @Resource
     private VectorStore programingAppVectorStore;
+
+    @Resource
+    private Advisor programingRagCloudAdvisor;
 
 
     private static final String SYSTEM_PROMPT_ADVANCE = "你是一名拥有15年经验的首席Java工程师，擅长处理高并发分布式系统及JVM性能调优。请按照以下结构化流程解决问题：\n" +
@@ -201,7 +205,9 @@ public class ProgramingApp {
                 // 开启日志
                 .advisors(new MyLoggerAdvisor())
                 // 启用rag知识库
-                .advisors(new QuestionAnswerAdvisor(programingAppVectorStore))
+                // .advisors(new QuestionAnswerAdvisor(programingAppVectorStore))
+                // 启用阿里云检索增强服务
+                .advisors(programingRagCloudAdvisor)
                 .call()
                 .chatResponse();
         String content = chatResponse.getResult().getOutput().getText();
