@@ -26,4 +26,9 @@ public class AppController {
         String string = programingApp.doChatWithRag(message, code);
         return string;
     }
+
+    @GetMapping("/health")
+    public String health(){
+        return "ok";
+    }
 }

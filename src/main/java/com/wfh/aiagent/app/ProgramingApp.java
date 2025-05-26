@@ -37,6 +37,9 @@ public class ProgramingApp {
     private VectorStore programingAppVectorStore;
 
     @Resource
+    private VectorStore pgVectorVectorStore;
+
+    @Resource
     private Advisor programingRagCloudAdvisor;
 
 
@@ -207,7 +210,9 @@ public class ProgramingApp {
                 // 启用rag知识库
                 // .advisors(new QuestionAnswerAdvisor(programingAppVectorStore))
                 // 启用阿里云检索增强服务
-                .advisors(programingRagCloudAdvisor)
+                // .advisors(programingRagCloudAdvisor)
+                // 基于pgvector的向量存储，检索增强
+                .advisors(new QuestionAnswerAdvisor(pgVectorVectorStore))
                 .call()
                 .chatResponse();
         String content = chatResponse.getResult().getOutput().getText();

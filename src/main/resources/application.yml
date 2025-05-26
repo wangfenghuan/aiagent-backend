@@ -6,11 +6,30 @@ spring:
   ai:
     dashscope:
       api-key: ${AI_DASHSCOPE_API_KEY}
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        dimensions: 1536
+        distance-type: COSINE_DISTANCE
+        max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
   datasource:
-    password: E628L1..3K220
-    url: jdbc:mysql://124.70.111.229:3306/aiagent?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
-    username: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 主数据源（MySQL）
+    mysql:
+      url: jdbc:mysql://124.70.111.229:3306/aiagent?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC&autoCommit=true
+      username: root
+      password: E628L1..3K220
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+    # 新增 PostgreSQL 数据源
+    postgres:
+      url: jdbc:postgresql://pgm-bp14qeuggpngx6w37o.rwlb.rds.aliyuncs.com/ai_agent
+      username: fenghuan
+      password: 7mW!9jK$
+      driver-class-name: org.postgresql.Driver
+
+    # 指定使用的连接池（可选，默认是HikariCP）
+    type: com.zaxxer.hikari.HikariDataSource
+
 # springdoc-openapi项目配置
 springdoc:
   swagger-ui:
@@ -23,11 +42,12 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: com.wfh.aiagent.controller
-# knife4j的增强配置，不需要增强可以不配
+# knife4j的增强配置
 knife4j:
   enable: true
   setting:
     language: zh_cn
+
 server:
   port: 8080
   servlet:
