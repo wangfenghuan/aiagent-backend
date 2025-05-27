@@ -21,11 +21,21 @@ public class ProgramingAppVectorStoreConfig {
     @Resource
     private ProgramingAppDocLoader programingAppDocLoader;
 
+    @Resource
+    private MyTokenTextSplitter myTokenTextSplitter;
+
+    @jakarta.annotation.Resource
+    private MyKeywordEnricher myKeywordEnricher;
+
     @Bean
     VectorStore programingAppVectorStore(EmbeddingModel dashscopeEmbeddingModel){
         SimpleVectorStore simpleVectorStore = SimpleVectorStore.builder(dashscopeEmbeddingModel).build();
         List<Document> documentList = programingAppDocLoader.loadMds();
-        simpleVectorStore.add(documentList);
+        // 自主切分文档
+        // List<Document> splitCustomized = myTokenTextSplitter.splitCustomized(documentList);
+        // 自动补充关键词元信息
+        List<Document> enrichDocuments = myKeywordEnricher.enrichDocuments(documentList);
+        simpleVectorStore.add(enrichDocuments);
         return simpleVectorStore;
     }
 }

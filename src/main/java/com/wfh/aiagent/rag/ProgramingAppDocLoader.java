@@ -38,11 +38,13 @@ public class ProgramingAppDocLoader {
             Resource[] resources = resourcePatternResolver.getResources("classpath*:doc/*.md");
             for (Resource resource : resources) {
                 String filename = resource.getFilename();
+                String status = filename.substring(filename.length() - 7, filename.length() - 4);
                 MarkdownDocumentReaderConfig readerConfig = MarkdownDocumentReaderConfig.builder()
                         .withHorizontalRuleCreateDocument(true)
                         .withIncludeBlockquote(false)
                         .withIncludeCodeBlock(false)
                         .withAdditionalMetadata("filename", filename)
+                        .withAdditionalMetadata("status", status)
                         .build();
                 MarkdownDocumentReader markdownDocumentReader = new MarkdownDocumentReader(resource, readerConfig);
                 documents.addAll(markdownDocumentReader.get());

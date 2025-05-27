@@ -4,6 +4,8 @@ import com.wfh.aiagent.advisor.MyLoggerAdvisor;
 import com.wfh.aiagent.advisor.ReReadingAdvisor;
 import com.wfh.aiagent.chatmemory.DbBasedMemory;
 import com.wfh.aiagent.chatmemory.FileBasedMemory;
+import com.wfh.aiagent.rag.ProgramingAppRagCustomAdvisorFactory;
+import com.wfh.aiagent.rag.QueryRewritter;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -41,6 +43,9 @@ public class ProgramingApp {
 
     @Resource
     private Advisor programingRagCloudAdvisor;
+
+    @Resource
+    private QueryRewritter queryRewritter;
 
 
     private static final String SYSTEM_PROMPT_ADVANCE = "你是一名拥有15年经验的首席Java工程师，擅长处理高并发分布式系统及JVM性能调优。请按照以下结构化流程解决问题：\n" +
@@ -95,7 +100,7 @@ public class ProgramingApp {
             "【知识扩展】\n" +
             "推荐2个相关论文/技术文档链接";
 
-    private static final String SYSTEM_PROMPT_DEFAULT = "你是一名资深Java技术专家，专注于高效解决具体编程问题。请按以下结构处理问题：\n" +
+    private static final String SYSTEM_PROMPT_DEFAULT = "与你对话的用户叫陈琪，而你是为她量身定制的一名资深Java技术小帮手，专注于高效解决陈琪提出的任何编程问题。请按以下结构处理问题（注意：第一次对话一定要先问好，并自我介绍）：\n" +
             "\n" +
             "【问题澄清】\n" +
             "1. 确认问题的核心矛盾点（明确输入输出）\n" +
@@ -200,9 +205,11 @@ public class ProgramingApp {
      * @return
      */
     public String doChatWithRag(String message, String chatId){
+        // 改写后的查询
+        String doneQueryRewrite = queryRewritter.doQueryRewrite(message);
         ChatResponse chatResponse = chatClient
                 .prompt()
-                .user(message)
+                .user(doneQueryRewrite)
                 .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
                 // 开启日志
@@ -212,7 +219,9 @@ public class ProgramingApp {
                 // 启用阿里云检索增强服务
                 // .advisors(programingRagCloudAdvisor)
                 // 基于pgvector的向量存储，检索增强
-                .advisors(new QuestionAnswerAdvisor(pgVectorVectorStore))
+                // .advisors(new QuestionAnswerAdvisor(pgVectorVectorStore))
+                .advisors(ProgramingAppRagCustomAdvisorFactory
+                        .createRagCustomAdvisor(programingAppVectorStore, "Java开发"))
                 .call()
                 .chatResponse();
         String content = chatResponse.getResult().getOutput().getText();
