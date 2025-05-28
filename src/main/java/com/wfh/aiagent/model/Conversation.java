@@ -1,9 +1,9 @@
 package com.wfh.aiagent.model;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
+import java.util.Date;
 import lombok.Data;
 
 /**
@@ -23,6 +23,21 @@ public class Conversation implements Serializable {
      * 消息列表
      */
     private String message;
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
+
+    /**
+     * 用户id
+     */
+    private Integer userId;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

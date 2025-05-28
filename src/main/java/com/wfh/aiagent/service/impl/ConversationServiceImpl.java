@@ -9,11 +9,11 @@ import org.springframework.stereotype.Service;
 /**
 * @author lenovo
 * @description 针对表【conversation(历史消息对话表)】的数据库操作Service实现
-* @createDate 2025-05-25 13:35:32
+* @createDate 2025-05-28 14:15:12
 */
 @Service
 public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Conversation>
-    implements ConversationService {
+    implements ConversationService{
 
 }
 

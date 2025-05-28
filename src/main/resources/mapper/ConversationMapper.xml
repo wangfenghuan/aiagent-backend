@@ -7,9 +7,13 @@
     <resultMap id="BaseResultMap" type="com.wfh.aiagent.model.Conversation">
             <id property="id" column="id" jdbcType="INTEGER"/>
             <result property="message" column="message" jdbcType="VARCHAR"/>
+            <result property="createTime" column="createTime" jdbcType="DATE"/>
+            <result property="updateTime" column="updateTime" jdbcType="DATE"/>
+            <result property="userId" column="userId" jdbcType="INTEGER"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,message
+        id,message,createTime,
+        updateTime,userId
     </sql>
 </mapper>
