@@ -155,6 +155,12 @@
             <version>1.0.0.1</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/com.huaweicloud/esdk-obs-java-bundle -->
+        <dependency>
+            <groupId>com.huaweicloud</groupId>
+            <artifactId>esdk-obs-java-bundle</artifactId>
+            <version>3.22.12</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -55,3 +55,10 @@ server:
 
 searchApi:
   apiKey: e5r6BUiyUTpTRVu33QSEZDYH
+#华为云对象云存储服务
+com:
+  obs:
+    endpoint: obs.cn-north-4.myhuaweicloud.com
+    access-key-id: 5Q1CUL8CO4U341YKIOI8
+    secret-access-key: cBuvnuetzShbtYKxhbqehbQryxtTnuA0DcNVFUoY
+    bucket-name: kmtec.top

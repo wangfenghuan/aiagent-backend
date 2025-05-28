@@ -8,9 +8,13 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.wfh.aiagent.constant.FileConstant;
+import com.wfh.aiagent.manager.ObsManager;
+import jakarta.annotation.Resource;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 
@@ -19,14 +23,19 @@ import java.nio.file.Paths;
  * @Date 2025/5/28 9:12
  * @Version 1.0
  */
+@Component
 public class PDFGenerationTool {
 
-    @Tool(description = "Generate a PDF file with given content")
+    @Resource
+    private ObsManager obsManager;
+
+    @Tool(description = "Generate a PDF file with given content", returnDirect = true)
     public String generatePDF(
             @ToolParam(description = "Name of the file to save the generated PDF") String fileName,
             @ToolParam(description = "Content to be included in the PDF") String content) {
         String fileDir = FileConstant.FILE_SAVE_DIR + "/pdf";
         String filePath = fileDir + "/" + fileName;
+        String upload;
         try {
             // 创建目录
             FileUtil.mkdir(fileDir);
@@ -47,7 +56,11 @@ public class PDFGenerationTool {
                 // 添加段落并关闭文档
                 document.add(paragraph);
             }
-            return "PDF generated successfully to: " + filePath;
+            // 上传到对象存储
+            File file = FileUtil.file(filePath);
+            upload = obsManager.upload(file, "pdf/" + fileName);
+            return "PDF generated successfully to local path: " + filePath
+                    +"And remote file path is:" + upload;
         } catch (IOException e) {
             return "Error generating PDF: " + e.getMessage();
         }
