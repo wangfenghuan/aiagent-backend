@@ -23,7 +23,7 @@ public class AppController {
     @PostMapping("/test")
     public String test(String message){
         String code = RandomUtil.randomNumbers(5);
-        String string = programingApp.doChatWithRag(message, code);
+        String string = programingApp.doChatWithRagTool(message, code);
         return string;
     }
 
