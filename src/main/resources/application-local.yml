@@ -6,4 +6,4 @@ spring:
       api-key: sk-3e4b3b0a5513440f80a23349057c653f
       chat:
         options:
-          model: qwen-max
+          model: qwen-plus

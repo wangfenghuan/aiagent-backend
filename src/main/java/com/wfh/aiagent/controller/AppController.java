@@ -1,12 +1,15 @@
 package com.wfh.aiagent.controller;
 
-import cn.hutool.core.util.RandomUtil;
 import com.wfh.aiagent.app.ProgramingApp;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.Disposable;
+
+import java.io.IOException;
 
 /**
  * @Author FengHuan Wang
@@ -20,11 +23,20 @@ public class AppController {
     @Resource
     private ProgramingApp programingApp;
 
-    @PostMapping("/test")
-    public String test(String message){
-        String code = RandomUtil.randomNumbers(5);
-        String string = programingApp.doChatWithRagTool(message, code);
-        return string;
+    @PostMapping(value = "/chat")
+    public SseEmitter test(String message, String chatId){
+        SseEmitter emitter = new SseEmitter();
+        // 服务端推送
+        Disposable subscribe = programingApp.doChatWithRagToolStream(message, chatId)
+                .subscribe(chunk -> {
+                    try {
+                        emitter.send(chunk);
+                    } catch (IOException e) {
+                        emitter.completeWithError(e);
+                    }
+                }, emitter::completeWithError, emitter::complete);
+        emitter.onCompletion(subscribe::dispose);
+        return emitter;
     }
 
     @GetMapping("/health")

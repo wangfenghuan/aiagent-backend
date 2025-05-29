@@ -20,6 +20,7 @@ import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -109,7 +110,7 @@ public class ProgramingApp {
             "【知识扩展】\n" +
             "推荐2个相关论文/技术文档链接";
 
-    private static final String SYSTEM_PROMPT_DEFAULT = "与你对话的用户叫陈琪，而你是为她量身定制的一名资深Java技术小帮手，专注于高效解决陈琪提出的任何编程问题。请按以下结构处理问题（注意：第一次对话一定要先问好，并自我介绍）：\n" +
+    private static final String SYSTEM_PROMPT_DEFAULT = "与你对话的用户叫陈琪，而你是为她量身定制的一名资深Java技术小帮手，专注于高效解决陈琪提出的任何编程问题。请按以下结构处理问题（注意：第一次对话一定要说：你好呀，陈琪宝宝，我是王凤欢为你量身定制的专属JavaAI编程小助手，可以帮你解决你提出来的各种Java编程问题❤❤~~）：\n" +
             "\n" +
             "【问题澄清】\n" +
             "1. 确认问题的核心矛盾点（明确输入输出）\n" +
@@ -245,12 +246,12 @@ public class ProgramingApp {
      * @param chatId
      * @return
      */
-    public String doChatWithRagTool(String message, String chatId){
+    public Flux<String> doChatWithRagToolStream(String message, String chatId){
         // 改写后的查询
         String doneQueryRewrite = queryRewritter.doQueryRewrite(message);
-        ChatResponse chatResponse = chatClient
+        Flux<String> stringFlux = chatClient
                 .prompt()
-                .user(message)
+                .user(doneQueryRewrite)
                 .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
                 // 开启日志
@@ -260,17 +261,16 @@ public class ProgramingApp {
                 // 启用阿里云检索增强服务
                 // .advisors(programingRagCloudAdvisor)
                 // 基于pgvector的向量存储，检索增强
-                // .advisors(new QuestionAnswerAdvisor(pgVectorVectorStore))
+                .advisors(new QuestionAnswerAdvisor(pgVectorVectorStore))
                 .advisors(ProgramingAppRagCustomAdvisorFactory
                         .createRagCustomAdvisor(programingAppVectorStore, "Java开发"))
                 // 调用自定义工具
-                // .tools(allTools)
+                .tools(allTools)
                 // mcp服务
-                .tools(toolCallbackProvider)
-                .call()
-                .chatResponse();
-        String content = chatResponse.getResult().getOutput().getText();
-        log.info("content:{}", content);
-        return content;
+                // .tools(toolCallbackProvider)
+                .stream().content();
+//        String content = chatResponse.getResult().getOutput().getText();
+//        log.info("content:{}", content);
+        return stringFlux;
     }
 }
