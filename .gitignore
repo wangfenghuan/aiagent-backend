@@ -1,3 +1,6 @@
+mcp-servers.json
+tmp
+application-local.yml
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
@@ -31,5 +34,3 @@ build/
 
 ### VS Code ###
 .vscode/
-tmp
-application-local.yml

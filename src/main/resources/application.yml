@@ -4,6 +4,14 @@ spring:
   profiles:
     active: local
   ai:
+    mcp:
+      client:
+#        sse:
+#          connections:
+#            server1:
+#              url: http://localhost:9090
+        sdtio:
+          servers-configuration: classpath:mcp-servers.json
     dashscope:
       api-key: ${AI_DASHSCOPE_API_KEY}
     vectorstore:

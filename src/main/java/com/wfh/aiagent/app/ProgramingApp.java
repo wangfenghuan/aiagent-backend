@@ -17,6 +17,7 @@ import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
@@ -50,6 +51,10 @@ public class ProgramingApp {
 
     @Resource
     private ToolCallback[] allTools;
+
+
+    @Resource
+    private ToolCallbackProvider toolCallbackProvider;
 
 
     private static final String SYSTEM_PROMPT_ADVANCE = "你是一名拥有15年经验的首席Java工程师，擅长处理高并发分布式系统及JVM性能调优。请按照以下结构化流程解决问题：\n" +
@@ -258,7 +263,10 @@ public class ProgramingApp {
                 // .advisors(new QuestionAnswerAdvisor(pgVectorVectorStore))
                 .advisors(ProgramingAppRagCustomAdvisorFactory
                         .createRagCustomAdvisor(programingAppVectorStore, "Java开发"))
-                .tools(allTools)
+                // 调用自定义工具
+                // .tools(allTools)
+                // mcp服务
+                .tools(toolCallbackProvider)
                 .call()
                 .chatResponse();
         String content = chatResponse.getResult().getOutput().getText();
