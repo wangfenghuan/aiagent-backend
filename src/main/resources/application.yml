@@ -1,10 +1,81 @@
 spring:
   application:
-    name: image-search-mcp
+    name: ai-agent
   profiles:
-    active: sse
-server:
-  port: 9090
+    active: local
+  ai:
+    mcp:
+      client:
+#        sse:
+#          connections:
+#            server1:
+#              url: http://localhost:9090
+        sdtio:
+          servers-configuration: classpath:mcp-servers.json
+    dashscope:
+      api-key: ${AI_DASHSCOPE_API_KEY}
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        dimensions: 1536
+        distance-type: COSINE_DISTANCE
+        max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
+  datasource:
+    # 主数据源（MySQL）
+    mysql:
+      url: jdbc:mysql://124.70.111.229:3306/aiagent?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC&autoCommit=true
+      username: root
+      password: E628L1..3K220
+      driver-class-name: com.mysql.cj.jdbc.Driver
 
-image:
-  apiKey: z9uORfoXTYlk3n4aeec4QbHdwVpbL7IrcyXglZ2MUVg8ZTK8UadupXii
+    # 新增 PostgreSQL 数据源
+    postgres:
+      url: jdbc:postgresql://pgm-bp14qeuggpngx6w37o.rwlb.rds.aliyuncs.com/ai_agent
+      username: fenghuan
+      password: 7mW!9jK$
+      driver-class-name: org.postgresql.Driver
+
+    # 指定使用的连接池（可选，默认是HikariCP）
+    type: com.zaxxer.hikari.HikariDataSource
+
+# springdoc-openapi项目配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.wfh.aiagent.controller
+# knife4j的增强配置
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: isDelete
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+    enable-sql-runner: true
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+searchApi:
+  apiKey: e5r6BUiyUTpTRVu33QSEZDYH
+#华为云对象云存储服务
+com:
+  obs:
+    endpoint: obs.cn-north-4.myhuaweicloud.com
+    access-key-id: 5Q1CUL8CO4U341YKIOI8
+    secret-access-key: cBuvnuetzShbtYKxhbqehbQryxtTnuA0DcNVFUoY
+    bucket-name: kmtec.top
