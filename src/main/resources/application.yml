@@ -23,9 +23,9 @@ spring:
   datasource:
     # 主数据源（MySQL）
     mysql:
-      url: jdbc:mysql://124.70.111.229:3306/aiagent?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC&autoCommit=true
-      username: root
-      password: E628L1..3K220
+      url: jdbc:mysql://:3306/aiagent?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC&autoCommit=true
+      username: 
+      password: 
       driver-class-name: com.mysql.cj.jdbc.Driver
 
     # 新增 PostgreSQL 数据源
@@ -71,11 +71,11 @@ server:
     context-path: /api
 
 searchApi:
-  apiKey: e5r6BUiyUTpTRVu33QSEZDYH
+  apiKey: 
 #华为云对象云存储服务
 com:
   obs:
     endpoint: obs.cn-north-4.myhuaweicloud.com
-    access-key-id: 5Q1CUL8CO4U341YKIOI8
-    secret-access-key: cBuvnuetzShbtYKxhbqehbQryxtTnuA0DcNVFUoY
+    access-key-id: 
+    secret-access-key: 
     bucket-name: kmtec.top
